@@ -105,7 +105,7 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
         self.loopedPlayerView.playerView.player = queuePlayer
         self.loopedPlayerView.titleLabel.text = item.title
         self.loopedPlayerView.subtitleLabel.text = item.subtitle
-        self.loopedPlayerView.creditLabel.text = item.credit
+        self.loopedPlayerView.creditLabel.text = item.credit.isEmpty ? " " : item.credit
     }
 
     public func prepareToPlay(_ item: any LoopedVideoPlayerPlaylistItem, playlist: [any LoopedVideoPlayerPlaylistItem]) {

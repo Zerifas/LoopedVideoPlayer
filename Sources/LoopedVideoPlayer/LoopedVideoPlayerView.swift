@@ -134,14 +134,14 @@ class LoopedVideoPlayerView: BaseView {
     private func setupPlaylistButtonConstraints(_ layout: UILayoutGuide) {
         NSLayoutConstraint.activate([
             self.previousButton.leadingAnchor.constraint(equalToSystemSpacingAfter: layout.leadingAnchor, multiplier: 1),
-            self.previousButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            self.previousButton.centerYAnchor.constraint(equalTo: self.creditLabel.centerYAnchor),
             self.previousButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 44),
             self.previousButton.heightAnchor.constraint(equalTo: self.previousButton.widthAnchor),
         ])
 
         NSLayoutConstraint.activate([
             layout.trailingAnchor.constraint(equalToSystemSpacingAfter: self.nextButton.trailingAnchor, multiplier: 1),
-            self.nextButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            self.nextButton.centerYAnchor.constraint(equalTo: self.creditLabel.centerYAnchor),
             self.nextButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 44),
             self.nextButton.heightAnchor.constraint(equalTo: self.nextButton.widthAnchor),
         ])
@@ -149,9 +149,9 @@ class LoopedVideoPlayerView: BaseView {
 
     private func setupCreditLabelConstraints(_ layout: UILayoutGuide) {
         NSLayoutConstraint.activate([
-            self.creditLabel.leadingAnchor.constraint(equalToSystemSpacingAfter: layout.leadingAnchor, multiplier: 1),
-            layout.trailingAnchor.constraint(equalToSystemSpacingAfter: self.creditLabel.trailingAnchor, multiplier: 1),
-            layout.bottomAnchor.constraint(equalToSystemSpacingBelow: self.creditLabel.bottomAnchor, multiplier: 1),
+            self.creditLabel.leadingAnchor.constraint(equalToSystemSpacingAfter: self.previousButton.trailingAnchor, multiplier: 1),
+            self.nextButton.leadingAnchor.constraint(equalToSystemSpacingAfter: self.creditLabel.trailingAnchor, multiplier: 1),
+            layout.bottomAnchor.constraint(equalToSystemSpacingBelow: self.creditLabel.bottomAnchor, multiplier: 2),
         ])
     }
 
