@@ -186,16 +186,25 @@ private extension UIButton {
         button.layer.masksToBounds = false
         button.layer.shouldRasterize = true
 
-        if let image = self.makeImage(systemName: systemName) {
+        if #available(iOS 13, *) {
+            let image = UIImage(systemName: systemName, withConfiguration: UIImage.SymbolConfiguration.large)
             button.setImage(image, for: .normal)
+        } else {
+            let title: String
+            switch systemName {
+            case "xmark": title = "✕"
+            case "chevron.backward": title = "<"
+            case "chevron.forward": title = ">"
+            default: title = ""
+            }
+
+            let fontSize = UIFont.preferredFont(forTextStyle: .largeTitle).pointSize
+            let font = UIFont(name: "Courier New", size: fontSize)
+            button.titleLabel?.font = font
+            button.setTitle(title, for: .normal)
         }
 
         return button
     }
 
-    static func makeImage(systemName: String?) -> UIImage? {
-        systemName.flatMap {
-            UIImage(systemName: $0, withConfiguration: UIImage.SymbolConfiguration.large)
-        }
-    }
 }

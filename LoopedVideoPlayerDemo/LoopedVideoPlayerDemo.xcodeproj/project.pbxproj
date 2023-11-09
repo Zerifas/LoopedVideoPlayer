@@ -11,7 +11,6 @@
 		853C07802AFC7958009C02C6 /* DemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853C077C2AFC7958009C02C6 /* DemoViewController.swift */; };
 		853C07822AFC7958009C02C6 /* DemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853C077E2AFC7958009C02C6 /* DemoView.swift */; };
 		853C07882AFC7D66009C02C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853C07862AFC7D66009C02C6 /* AppDelegate.swift */; };
-		853C07892AFC7D66009C02C6 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853C07872AFC7D66009C02C6 /* SceneDelegate.swift */; };
 		853C078C2AFC7DB0009C02C6 /* LoopedVideoPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 853C078B2AFC7DB0009C02C6 /* LoopedVideoPlayer */; };
 		853C078F2AFC8070009C02C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 853C078E2AFC8070009C02C6 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -22,7 +21,6 @@
 		853C077C2AFC7958009C02C6 /* DemoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoViewController.swift; sourceTree = "<group>"; };
 		853C077E2AFC7958009C02C6 /* DemoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoView.swift; sourceTree = "<group>"; };
 		853C07862AFC7D66009C02C6 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		853C07872AFC7D66009C02C6 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		853C078D2AFC7DF7009C02C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		853C078E2AFC8070009C02C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -64,7 +62,6 @@
 				853C07862AFC7D66009C02C6 /* AppDelegate.swift */,
 				853C077E2AFC7958009C02C6 /* DemoView.swift */,
 				853C077C2AFC7958009C02C6 /* DemoViewController.swift */,
-				853C07872AFC7D66009C02C6 /* SceneDelegate.swift */,
 				853C07742AFC788B009C02C6 /* Preview Content */,
 			);
 			path = LoopedVideoPlayerDemo;
@@ -162,7 +159,6 @@
 				853C07882AFC7D66009C02C6 /* AppDelegate.swift in Sources */,
 				853C07802AFC7958009C02C6 /* DemoViewController.swift in Sources */,
 				853C07822AFC7958009C02C6 /* DemoView.swift in Sources */,
-				853C07892AFC7D66009C02C6 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,7 +215,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -273,7 +269,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

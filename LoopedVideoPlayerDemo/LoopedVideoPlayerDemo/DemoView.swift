@@ -24,7 +24,8 @@ class DemoView: BaseView {
     }()
 
     override func setupSubviews() {
-        self.backgroundColor = .systemBackground
+        let background = UIColor(named: "background")
+        self.backgroundColor = background
         self.addSubview(self.playSingleVideoButton)
         self.addSubview(self.playPlaylistButton)
     }
