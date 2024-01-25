@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class LoopedVideoPlayerView: BaseView {
+public class LoopedVideoPlayerView: BaseView {
     let closeButton: UIButton = .makeLargeButton(systemName: "xmark", tintColor: .white)
 
     let titleLabel: UILabel = {
@@ -28,6 +28,18 @@ class LoopedVideoPlayerView: BaseView {
 
         return label
     }()
+
+    public var trailingButton: UIButton? {
+        didSet {
+            if let oldValue {
+                oldValue.removeFromSuperview()
+            }
+
+            if let trailingButton {
+                self.addTrailingButton(trailingButton)
+            }
+        }
+    }
 
     let subtitleLabel: UILabel = {
         let label = UILabel()
@@ -75,7 +87,7 @@ class LoopedVideoPlayerView: BaseView {
         return view
     }()
 
-    override func setupSubviews() {
+    public override func setupSubviews() {
         self.backgroundColor = .black
 
         // Must add this first, or rearrange subviews later.
@@ -91,7 +103,7 @@ class LoopedVideoPlayerView: BaseView {
 
     // MARK: - Constraints
 
-    override func setupConstraints() {
+    public override func setupConstraints() {
         let layout = self.safeAreaLayoutGuide
 
         self.setupCloseButtonConstraints(layout)
@@ -162,6 +174,21 @@ class LoopedVideoPlayerView: BaseView {
             self.playerView.widthAnchor.constraint(equalTo: layout.widthAnchor),
             self.playerView.topAnchor.constraint(equalTo: layout.topAnchor),
             self.playerView.bottomAnchor.constraint(equalTo: layout.bottomAnchor),
+        ])
+    }
+
+    private func addTrailingButton(_ button: UIButton) {
+        let layout = self.safeAreaLayoutGuide
+
+        self.addSubview(button)
+
+        button.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+
+        NSLayoutConstraint.activate([
+            button.trailingAnchor.constraint(equalToSystemSpacingAfter: layout.trailingAnchor, multiplier: 1),
+            button.topAnchor.constraint(equalToSystemSpacingBelow: layout.topAnchor, multiplier: 1),
+            button.widthAnchor.constraint(greaterThanOrEqualToConstant: 44),
+            button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
         ])
     }
 }
