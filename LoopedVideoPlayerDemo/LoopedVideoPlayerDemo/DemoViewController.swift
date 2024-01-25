@@ -99,7 +99,10 @@ class DemoViewController: UIViewController {
     @objc
     private func playPlaylistButtonTapped(sender: UIButton) {
         self.setupMultiItemPlaylist()
-        self.setupPlayer()
+        self.setupPlayer { player in
+            guard let lastIndex = self.playlist.indices.last else { return }
+            player.setCurrentIndex(lastIndex)
+        }
     }
 
     @objc
@@ -214,7 +217,7 @@ extension DemoViewController: LoopedVideoPlayerDelegate {
     func loopedVideoPlayer(_ player: LoopedVideoPlayerViewController, willPlay item: LoopedVideoPlayerPlaylistItem, forItemAt index: Int) {
         debugPrint("willPlay \(item) forItemAt \(index)")
         self.currentItem = item
-        self.setupFavoriteButton(for: item)
+        _ = self.setupFavoriteButton(for: item)
     }
 }
 

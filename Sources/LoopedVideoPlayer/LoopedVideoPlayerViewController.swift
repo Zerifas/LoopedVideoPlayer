@@ -25,6 +25,7 @@ public struct LoopedVideoPlayerPlaylistItem: Equatable {
 
 public protocol LoopedVideoPlayerViewControllerProtocol {
     func reloadData()
+    func setCurrentIndex(_ index: Int)
 }
 
 public protocol LoopedVideoPlayerDelegate: AnyObject {
@@ -38,10 +39,12 @@ public protocol LoopedVideoPlayerDataSource {
 
 @objc
 public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlayerViewControllerProtocol {
+    typealias CurrentItem = (index: Int, item: LoopedVideoPlayerPlaylistItem)
+
     public var dataSource: LoopedVideoPlayerDataSource?
     public weak var delegate: LoopedVideoPlayerDelegate?
 
-    private var currentItemIndex: Int = 0
+    private var currentItem: CurrentItem?
 
     private var notificationCenter: NotificationCenter?
     private var playerLooper: AVPlayerLooper?
@@ -83,7 +86,8 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        _ = self.prepareToPlayItem(at: self.currentItemIndex)
+        guard self.currentItem == nil else { return }
+        _ = self.loadItemAt(0)
     }
 
     public override func viewDidAppear(_ animated: Bool) {
@@ -99,8 +103,12 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
     // MARK: - LoopedVideoPlayerViewControllerProtocol
 
     public func reloadData() {
-        self.currentItemIndex = 0
-        self.updateNavigationUI()
+        self.currentItem = nil
+        _ = self.loadItemAt(0)
+    }
+
+    public func setCurrentIndex(_ index: Int) {
+        _ = self.loadItemAt(index)
     }
 
     // MARK: - Actions
@@ -112,13 +120,25 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
 
     @objc
     private func previousButtonTapped(sender: UIButton) {
-        guard self.prepareToPlayItem(at: self.currentItemIndex - 1) else { return }
+        guard
+            let currentItemIndex = self.currentItem?.index,
+            self.loadItemAt(currentItemIndex - 1)
+        else {
+            return
+        }
+
         self.play()
     }
 
     @objc
     private func nextButtonTapped(sender: UIButton) {
-        guard self.prepareToPlayItem(at: self.currentItemIndex + 1) else { return }
+        guard
+            let currentItemIndex = self.currentItem?.index,
+            self.loadItemAt(currentItemIndex + 1)
+        else {
+            return
+        }
+
         self.play()
     }
 
@@ -127,10 +147,11 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
     private func play() {
         guard
             let player = self.loopedPlayerView.playerView.player,
-            let item = self.dataSource?.loopedVideoPlayer(self, itemAt: self.currentItemIndex)
+            let currentItem = self.currentItem
         else { return }
 
-        self.delegate?.loopedVideoPlayer(self, willPlay: item, forItemAt: self.currentItemIndex)
+
+        self.delegate?.loopedVideoPlayer(self, willPlay: currentItem.item, forItemAt: currentItem.index)
         player.play()
     }
 
@@ -139,24 +160,25 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
     }
 
     private func updateNavigationUI() {
-        guard let itemCount = self.dataSource?.numberOfItems(for: self) else {
+        guard
+            let itemCount = self.dataSource?.numberOfItems(for: self),
+            let currentItemIndex = self.currentItem?.index
+        else {
             self.loopedPlayerView.previousButton.isHidden = true
             self.loopedPlayerView.nextButton.isHidden = true
             return
         }
 
-        self.loopedPlayerView.previousButton.isHidden = self.currentItemIndex == 0
-        self.loopedPlayerView.nextButton.isHidden = self.currentItemIndex >= itemCount - 1
+        self.loopedPlayerView.previousButton.isHidden = currentItemIndex == 0
+        self.loopedPlayerView.nextButton.isHidden = currentItemIndex >= itemCount - 1
     }
 
-    private func prepareToPlayItem(at index: Int) -> Bool {
+    private func loadItemAt(_ index: Int) -> Bool {
         defer { self.updateNavigationUI() }
 
         guard let dataSource else { return false }
         let numberOfItems = dataSource.numberOfItems(for: self)
         guard (0..<numberOfItems).contains(index) else { return false }
-
-        self.currentItemIndex = index
 
         let item = dataSource.loopedVideoPlayer(self, itemAt: index)
         let playerItem = AVPlayerItem(url: item.url)
@@ -168,6 +190,8 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
         self.loopedPlayerView.titleLabel.text = item.title
         self.loopedPlayerView.subtitleLabel.text = item.subtitle
         self.loopedPlayerView.creditLabel.text = item.credit.isEmpty ? " " : item.credit
+
+        self.currentItem = (index, item)
 
         return true
     }
