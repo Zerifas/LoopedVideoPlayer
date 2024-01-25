@@ -9,42 +9,45 @@ import AVFoundation
 import Foundation
 import UIKit
 
-public protocol LoopedVideoPlayerPlaylistItem {
-    var url: URL { get }
-    var title: String { get }
-    var subtitle: String { get }
-    var credit: String { get }
+public struct LoopedVideoPlayerPlaylistItem: Equatable {
+    public let url: URL
+    public let title: String
+    public let subtitle: String
+    public let credit: String
 
-    func equalTo(_ other: any LoopedVideoPlayerPlaylistItem) -> Bool
-}
-
-// TODO: Is there a proper way to conform to Equatable instead of this?
-private extension LoopedVideoPlayerPlaylistItem {
-    func equalTo(_ other: Self) -> Bool {
-        self.url == other.url &&
-        self.title == other.title &&
-        self.subtitle == other.subtitle &&
-        self.credit == other.credit
+    public init(url: URL, title: String, subtitle: String, credit: String) {
+        self.url = url
+        self.title = title
+        self.subtitle = subtitle
+        self.credit = credit
     }
 }
 
-protocol LoopedVideoPlayerViewControllerProtocol {
-    func prepareToPlay(_ item: any LoopedVideoPlayerPlaylistItem)
-    func prepareToPlay(_ item: any LoopedVideoPlayerPlaylistItem, playlist: [any LoopedVideoPlayerPlaylistItem])
+public protocol LoopedVideoPlayerViewControllerProtocol {
+    func reloadData()
+}
+
+public protocol LoopedVideoPlayerDelegate: AnyObject {
+    func loopedVideoPlayer(_ player: LoopedVideoPlayerViewController, willPlay item: LoopedVideoPlayerPlaylistItem, forItemAt index: Int)
+}
+
+public protocol LoopedVideoPlayerDataSource {
+    func numberOfItems(for player: LoopedVideoPlayerViewController) -> Int
+    func loopedVideoPlayer(_ player: LoopedVideoPlayerViewController, itemAt: Int) -> LoopedVideoPlayerPlaylistItem
 }
 
 @objc
 public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlayerViewControllerProtocol {
+    public var dataSource: LoopedVideoPlayerDataSource?
+    public weak var delegate: LoopedVideoPlayerDelegate?
+
+    private var currentItemIndex: Int = 0
+
     private var notificationCenter: NotificationCenter?
     private var playerLooper: AVPlayerLooper?
     private var observers: [NSObjectProtocol] = []
 
-    private var currentItem: (any LoopedVideoPlayerPlaylistItem)?
-    private var playlist: [any LoopedVideoPlayerPlaylistItem]?
-
-    private var loopedPlayerView: LoopedVideoPlayerView {
-        self.view as! LoopedVideoPlayerView
-    }
+    public private(set) lazy var loopedPlayerView = LoopedVideoPlayerView()
 
     // MARK: - Initializers
 
@@ -67,7 +70,7 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
     // MARK: - View lifecycle
 
     public override func loadView() {
-        self.view = LoopedVideoPlayerView()
+        self.view = self.loopedPlayerView
     }
 
     public override func viewDidLoad() {
@@ -80,41 +83,23 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.updateNavigationUI()
+        _ = self.prepareToPlayItem(at: self.currentItemIndex)
     }
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.loopedPlayerView.playerView.player?.play()
+        self.play()
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.loopedPlayerView.playerView.player?.pause()
+        self.pause()
     }
 
     // MARK: - LoopedVideoPlayerViewControllerProtocol
 
-    public func prepareToPlay(_ item: any LoopedVideoPlayerPlaylistItem) {
-        let playerItem = AVPlayerItem(url: item.url)
-        let queuePlayer = AVQueuePlayer(playerItem: playerItem)
-        queuePlayer.isMuted = true
-
-        self.playerLooper = AVPlayerLooper(player: queuePlayer, templateItem: playerItem)
-
-        self.loopedPlayerView.playerView.player = queuePlayer
-        self.loopedPlayerView.titleLabel.text = item.title
-        self.loopedPlayerView.subtitleLabel.text = item.subtitle
-        self.loopedPlayerView.creditLabel.text = item.credit.isEmpty ? " " : item.credit
-    }
-
-    public func prepareToPlay(_ item: any LoopedVideoPlayerPlaylistItem, playlist: [any LoopedVideoPlayerPlaylistItem]) {
-        guard !playlist.isEmpty, playlist.map({ $0.url }).contains(item.url) else { return }
-
-        self.playlist = playlist
-        self.currentItem = item
-        self.prepareToPlay(item)
-
+    public func reloadData() {
+        self.currentItemIndex = 0
         self.updateNavigationUI()
     }
 
@@ -127,64 +112,64 @@ public class LoopedVideoPlayerViewController: UIViewController, LoopedVideoPlaye
 
     @objc
     private func previousButtonTapped(sender: UIButton) {
-        defer { self.updateNavigationUI() }
-
-        guard
-            let playlist,
-            let currentItem,
-            let currentIndex = playlist.firstIndex(where: { $0.equalTo(currentItem) })
-        else {
-            return
-        }
-
-        let previousIndex = playlist.index(before: currentIndex) // TODO: Could this crash?
-        guard playlist.indices.contains(previousIndex) else {
-            fatalError("Invalid array index")
-        }
-
-        let newItem = playlist[previousIndex]
-        self.currentItem = playlist[previousIndex]
-        self.prepareToPlay(newItem)
-        self.loopedPlayerView.playerView.player?.play()
+        guard self.prepareToPlayItem(at: self.currentItemIndex - 1) else { return }
+        self.play()
     }
 
     @objc
     private func nextButtonTapped(sender: UIButton) {
-        defer { self.updateNavigationUI() }
+        guard self.prepareToPlayItem(at: self.currentItemIndex + 1) else { return }
+        self.play()
+    }
 
+    // MARK: - Internal
+
+    private func play() {
         guard
-            let playlist,
-            let currentItem,
-            let currentIndex = playlist.firstIndex(where: { $0.equalTo(currentItem) })
-        else {
-            return
-        }
+            let player = self.loopedPlayerView.playerView.player,
+            let item = self.dataSource?.loopedVideoPlayer(self, itemAt: self.currentItemIndex)
+        else { return }
 
-        let nextIndex = playlist.index(after: currentIndex) // TODO: Could this crash?
-        guard playlist.indices.contains(nextIndex) else {
-            fatalError("Invalid array index")
-        }
+        self.delegate?.loopedVideoPlayer(self, willPlay: item, forItemAt: self.currentItemIndex)
+        player.play()
+    }
 
-        let newItem = playlist[nextIndex]
-        self.currentItem = playlist[nextIndex]
-        self.prepareToPlay(newItem)
-        self.loopedPlayerView.playerView.player?.play()
+    private func pause() {
+        self.loopedPlayerView.playerView.player?.pause()
     }
 
     private func updateNavigationUI() {
-        guard
-            let playlist,
-            !playlist.isEmpty,
-            let currentItem,
-            let currentIndex = playlist.firstIndex(where: { $0.url == currentItem.url })
-        else {
+        guard let itemCount = self.dataSource?.numberOfItems(for: self) else {
             self.loopedPlayerView.previousButton.isHidden = true
             self.loopedPlayerView.nextButton.isHidden = true
             return
         }
 
-        self.loopedPlayerView.previousButton.isHidden = currentIndex == playlist.startIndex
-        self.loopedPlayerView.nextButton.isHidden = currentIndex == playlist.endIndex - 1
+        self.loopedPlayerView.previousButton.isHidden = self.currentItemIndex == 0
+        self.loopedPlayerView.nextButton.isHidden = self.currentItemIndex >= itemCount - 1
+    }
+
+    private func prepareToPlayItem(at index: Int) -> Bool {
+        defer { self.updateNavigationUI() }
+
+        guard let dataSource else { return false }
+        let numberOfItems = dataSource.numberOfItems(for: self)
+        guard (0..<numberOfItems).contains(index) else { return false }
+
+        self.currentItemIndex = index
+
+        let item = dataSource.loopedVideoPlayer(self, itemAt: index)
+        let playerItem = AVPlayerItem(url: item.url)
+        let queuePlayer = AVQueuePlayer(playerItem: playerItem)
+
+        self.playerLooper = AVPlayerLooper(player: queuePlayer, templateItem: playerItem)
+
+        self.loopedPlayerView.playerView.player = queuePlayer
+        self.loopedPlayerView.titleLabel.text = item.title
+        self.loopedPlayerView.subtitleLabel.text = item.subtitle
+        self.loopedPlayerView.creditLabel.text = item.credit.isEmpty ? " " : item.credit
+
+        return true
     }
 
     // MARK: - Notifications
